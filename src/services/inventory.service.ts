@@ -10,7 +10,7 @@ export class InventoryService {
     productId: string;
     quantity: number;
     importPrice: number;
-    provider?: string;
+    providerId?: string;
   }) {
     if (data.quantity <= 0) {
       throw new Error("Số lượng nhập phải lớn hơn 0");
@@ -24,7 +24,7 @@ export class InventoryService {
           productId: data.productId,
           quantity: data.quantity,
           importPrice: data.importPrice,
-          provider: data.provider,
+          providerId: data.providerId,
         },
       });
 
