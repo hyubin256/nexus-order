@@ -6,7 +6,7 @@ import { CreateUserModal } from "@/components/settings/create-user-modal";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Quản lý nhân viên | Minh Huy",
+  title: "Quản lý nhân viên | Huy Thịnh",
 };
 
 export default async function UsersPage() {

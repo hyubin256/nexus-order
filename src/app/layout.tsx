@@ -13,10 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 import { AuthProvider } from "@/components/providers/session-provider";
+import { SWRProvider } from "@/components/providers/swr-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "Minh Huy - Dashboard",
+  title: "Huy Thịnh - Dashboard",
   description: "Hệ thống quản lý bán hàng và kho hàng hiện đại.",
 };
 
@@ -30,10 +31,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          {children}
-          <Toaster />
-        </AuthProvider>
+        <SWRProvider>
+          <AuthProvider>
+            {children}
+            <Toaster />
+          </AuthProvider>
+        </SWRProvider>
       </body>
     </html>
   );

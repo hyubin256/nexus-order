@@ -27,7 +27,7 @@ export default async function DashboardLayout({
           <div className="flex items-center gap-4">
             <MobileNav />
             <Link href="/" className="flex items-center gap-2">
-              <span className="text-xl font-bold bg-linear-to-r from-primary to-blue-600 bg-clip-text text-transparent">Minh Huy</span>
+              <span className="text-xl font-bold bg-linear-to-r from-primary to-blue-600 bg-clip-text text-transparent">Huy Thịnh</span>
             </Link>
           </div>
 

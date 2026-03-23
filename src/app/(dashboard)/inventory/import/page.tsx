@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Calendar as CalendarIcon, Save, Plus, Trash2, Check, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import useSWR, { useSWRConfig } from "swr";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,7 @@ interface Supplier {
 
 export default function ImportInventoryPage() {
   const router = useRouter();
+  const { mutate } = useSWRConfig();
 
   // Header State
   const [supplierId, setSupplierId] = useState<string>("");
@@ -78,33 +80,16 @@ export default function ImportInventoryPage() {
 
   // Body State (Dynamic Table)
   const [rows, setRows] = useState<ImportRow[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+
+  // SWR Hook for products and suppliers
+  const { data: productsData } = useSWR("/api/products?limit=100");
+  const { data: suppliersData } = useSWR("suppliers", getSuppliers);
+
+  const products: Product[] = productsData?.data || [];
+  const suppliers: Supplier[] = suppliersData?.success ? (suppliersData.data as Supplier[]) : [];
 
   // Combobox popover states
   const [openComboboxIndex, setOpenComboboxIndex] = useState<number | null>(null);
-
-  // Fetch initial data
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [prodRes, suppRes] = await Promise.all([
-          fetch("/api/products?limit=100"),
-          getSuppliers()
-        ]);
-
-        const prodJson = await prodRes.json();
-        if (prodJson.data) setProducts(prodJson.data);
-
-        if (suppRes.success && suppRes.data) {
-          setSuppliers(suppRes.data as Supplier[]);
-        }
-      } catch (error) {
-        console.error("Failed to load data:", error);
-      }
-    }
-    fetchData();
-  }, []);
 
   // Handlers for dynamic table
   const addRow = () => {
@@ -193,7 +178,7 @@ export default function ImportInventoryPage() {
   };
 
   const handleAddSupplierSuccess = (newSupplier: Supplier) => {
-    setSuppliers([...suppliers, newSupplier]);
+    mutate("suppliers"); // Trigger SWR revalidation
     setSupplierId(newSupplier.id);
     setSelectedSupplier(newSupplier);
     setIsSupplierModalOpen(false);
@@ -245,7 +230,7 @@ export default function ImportInventoryPage() {
                           <CommandInput placeholder="Tìm nhà cung cấp..." />
                           <CommandList>
                             <CommandEmpty>Không tìm thấy nhà cung cấp nào.</CommandEmpty>
-                            <CommandGroup>
+                            <CommandGroup tabIndex={0}>
                               {suppliers.map((p) => (
                                 <CommandItem
                                   key={p.id}
@@ -375,7 +360,7 @@ export default function ImportInventoryPage() {
                                 <CommandList>
                                   <CommandEmpty>Không tìm thấy.</CommandEmpty>
                                   <CommandGroup>
-                                    {products.map((product) => (
+                                    {products.map((product: Product) => (
                                       <CommandItem
                                         value={`${product.sku} ${product.name}`}
                                         key={product.id}

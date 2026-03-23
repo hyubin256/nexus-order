@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Hồ sơ cá nhân | Minh Huy",
+  title: "Hồ sơ cá nhân | Huy Thịnh",
   description: "Quản lý thông tin cá nhân và mật khẩu của bạn.",
 };
 

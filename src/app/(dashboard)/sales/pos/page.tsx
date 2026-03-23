@@ -40,6 +40,7 @@ import { getCustomerByPhone } from "@/actions/customer";
 import { createPOSOrder } from "@/actions/pos";
 import { uploadPaymentBill } from "@/actions/upload";
 import { Upload, Image as ImageIcon, Loader2, AlertCircle } from "lucide-react";
+import { ExportOrderPDFButton } from "@/components/sales/export-pdf-button";
 
 interface Product {
   id: string;
@@ -80,7 +81,7 @@ export default function POSPage() {
   const [discountValue, setDiscountValue] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
   const [processing, setProcessing] = React.useState(false);
-  const [orderSuccess, setOrderSuccess] = React.useState<{ id: string; code: string } | null>(null);
+  const [orderSuccess, setOrderSuccess] = React.useState<any | null>(null);
   const [paymentMethod, setPaymentMethod] = React.useState<"CASH" | "TRANSFER">("CASH");
   const [transactionId, setTransactionId] = React.useState("");
   const [paymentImage, setPaymentImage] = React.useState<string | null>(null);
@@ -249,7 +250,7 @@ export default function POSPage() {
     });
 
     if (result.success && result.data) {
-      setOrderSuccess({ id: result.data.id, code: result.data.code });
+      setOrderSuccess(result.data);
       setCart([]);
       setCustomer(null);
       setCustomerPhone("");
@@ -278,10 +279,9 @@ export default function POSPage() {
           <p className="text-muted-foreground">Mã đơn hàng: <span className="font-mono font-bold text-foreground">{orderSuccess.code}</span></p>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-          <Button variant="outline" className="flex-1 gap-2" onClick={() => window.print()}>
-            <Printer className="h-4 w-4" />
-            In hóa đơn
-          </Button>
+          <div className="flex-1 flex pointer-events-auto [&>a]:w-full [&>a]:justify-center">
+            <ExportOrderPDFButton order={orderSuccess} />
+          </div>
           <Button className="flex-1" onClick={() => setOrderSuccess(null)}>
             Tiếp tục bán hàng
           </Button>

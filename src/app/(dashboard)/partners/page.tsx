@@ -8,7 +8,7 @@ import { Users, Truck } from "lucide-react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Quản lý Đối tác | Minh Huy",
+  title: "Quản lý Đối tác | Huy Thịnh",
 };
 
 export default async function PartnersPage() {

@@ -13,8 +13,14 @@ import { vi } from "date-fns/locale";
 import { numberToVietnameseWords } from "@/lib/utils";
 
 Font.register({
-  family: "Roboto",
-  src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf",
+  family: 'Roboto',
+  fonts: [
+    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf' },
+    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-medium-webfont.ttf', fontWeight: 500 },
+    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf', fontWeight: 700 },
+    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf', fontWeight: 'bold' },
+    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-italic-webfont.ttf', fontStyle: 'italic' },
+  ],
 });
 
 const styles = StyleSheet.create({
@@ -69,7 +75,7 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 10,
-    fontWeight: "medium",
+    fontWeight: 500,
     color: "#1e293b",
     marginBottom: 5,
   },
@@ -93,8 +99,8 @@ const styles = StyleSheet.create({
   tableColIndex: { width: "8%", padding: 5, textAlign: "center" },
   tableColName: { width: "42%", padding: 5 },
   tableColQty: { width: "10%", padding: 5, textAlign: "center" },
-  tableColPrice: { width: "20%", padding: 5, textAlign: "right" },
-  tableColTotal: { width: "20%", padding: 5, textAlign: "right" },
+  tableColPrice: { width: "20%", padding: 5, textAlign: "center" },
+  tableColTotal: { width: "20%", padding: 5, textAlign: "center" },
 
   footer: {
     marginTop: 20,
@@ -159,19 +165,18 @@ export const OrderPDF = ({ order }: Props) => {
   return (
     <Document title={`HOA-DON-${order.code}`}>
       <Page size="A4" style={styles.page}>
+        <Text style={styles.title}>Hóa Đơn Bán Hàng</Text>
+
         <View style={styles.header}>
-          <View>
-            <Text style={styles.companyName}>MINH HUY</Text>
+          {/* <View>
+            <Text style={styles.companyName}>HUY THỊNH</Text>
             <Text style={{ fontSize: 9, color: "#64748b" }}>Hệ thống quản lý bán hàng thông minh</Text>
-          </View>
-          <View style={styles.companyInfo}>
-            <Text>123 Đường ABC, Phường 15, Quận 10</Text>
-            <Text>TP. Hồ Chí Minh, Việt Nam</Text>
-            <Text>Hotline: 1900 6789 - support@nexusorder.vn</Text>
+          </View> */}
+          <View style={[styles.companyInfo, { textAlign: "left" }]}>
+            <Text><Text style={{ fontWeight: 700 }}>Tên người bán:</Text> Minh Huy</Text>
+            <Text><Text style={{ fontWeight: 700 }}>Số điện thoại:</Text> 0799310905</Text>
           </View>
         </View>
-
-        <Text style={styles.title}>Hóa Đơn Bán Hàng</Text>
 
         <View style={styles.infoSection}>
           <View style={styles.infoBlock}>
@@ -181,19 +186,19 @@ export const OrderPDF = ({ order }: Props) => {
             <Text style={styles.value}>{order.customerPhone || "N/A"}</Text>
             <Text style={styles.label}>Địa chỉ:</Text>
             <Text style={styles.value}>{order.customerAddress || "N/A"}</Text>
-            {order.taxCode && (
-              <>
+            {order.taxCode ? (
+              <View>
                 <Text style={styles.label}>Mã số thuế:</Text>
                 <Text style={styles.value}>{order.taxCode}</Text>
-              </>
-            )}
+              </View>
+            ) : null}
           </View>
           <View style={styles.infoBlock}>
             <Text style={styles.label}>Số hóa đơn:</Text>
             <Text style={[styles.value, { color: "#0f172a", fontWeight: "bold" }]}>{order.code}</Text>
             <Text style={styles.label}>Ngày lập:</Text>
             <Text style={styles.value}>
-              {format(new Date(order.createdAt), "dd/MM/yyyy HH:mm", {
+              {format(new Date(order.createdAt), "HH:mm dd/MM/yyyy", {
                 locale: vi,
               })}
             </Text>
@@ -204,10 +209,10 @@ export const OrderPDF = ({ order }: Props) => {
 
         <View style={styles.table}>
           <View style={[styles.tableRow, styles.tableHeader]}>
-            <View style={styles.tableColIndex}><Text>#</Text></View>
-            <View style={styles.tableColName}><Text>Tên sản phẩm</Text></View>
-            <View style={styles.tableColQty}><Text>SL</Text></View>
+            <View style={styles.tableColIndex}><Text>STT</Text></View>
+            <View style={[styles.tableColName, { textAlign: "center" }]}><Text>Tên mặt hàng</Text></View>
             <View style={styles.tableColPrice}><Text>Đơn giá</Text></View>
+            <View style={styles.tableColQty}><Text>Số lượng</Text></View>
             <View style={styles.tableColTotal}><Text>Thành tiền</Text></View>
           </View>
 
@@ -216,48 +221,57 @@ export const OrderPDF = ({ order }: Props) => {
               <View style={styles.tableColIndex}><Text>{index + 1}</Text></View>
               <View style={styles.tableColName}>
                 <Text>{item.product.name}</Text>
-                <Text style={{ fontSize: 8, color: "#64748b" }}>SKU: {item.product.sku}</Text>
+                {item.product.sku ? <Text style={{ fontSize: 8, color: "#64748b" }}>SKU: {item.product.sku}</Text> : null}
               </View>
-              <View style={styles.tableColQty}><Text>{item.quantity}</Text></View>
               <View style={styles.tableColPrice}><Text>{formatCurrency(item.priceAtSale)}</Text></View>
+              <View style={styles.tableColQty}><Text>{item.quantity}</Text></View>
               <View style={styles.tableColTotal}><Text>{formatCurrency(item.quantity * item.priceAtSale)}</Text></View>
             </View>
           ))}
+
+          {discountAmount > 0 ? (
+            <View style={[styles.tableRow, { borderBottomWidth: 1, borderBottomColor: "#e2e8f0" }]}>
+              <View style={{ width: "80%", padding: 5, textAlign: "right" }}>
+                <Text style={{ color: "#64748b" }}>Chiết khấu:</Text>
+              </View>
+              <View style={{ width: "20%", padding: 5, textAlign: "right" }}>
+                <Text style={{ color: "#64748b" }}>-{formatCurrency(discountAmount)}</Text>
+              </View>
+            </View>
+          ) : null}
+
+          <View style={[styles.tableRow, { backgroundColor: "#f8fafc", minHeight: 40 }]}>
+            <View style={{ width: "80%", padding: 5, textAlign: "right" }}>
+              <Text style={{ fontWeight: "bold", fontSize: 12, textTransform: "uppercase" }}>Tổng cộng:</Text>
+            </View>
+            <View style={{ width: "20%", padding: 5, textAlign: "right" }}>
+              <Text style={{ fontWeight: "bold", fontSize: 12, color: "#0f172a" }}>{formatCurrency(order.finalAmount)}</Text>
+            </View>
+          </View>
         </View>
 
-        <View style={styles.footer}>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Tạm tính:</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(order.totalAmount)}</Text>
-          </View>
-          {discountAmount > 0 && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Chiết khấu:</Text>
-              <Text style={styles.summaryValue}>-{formatCurrency(discountAmount)}</Text>
-            </View>
-          )}
-          <View style={[styles.summaryRow, { marginTop: 5 }]}>
-            <Text style={[styles.summaryLabel, { fontSize: 12, color: "#0f172a" }]}>Tổng cộng:</Text>
-            <Text style={[styles.summaryValue, styles.finalAmount]}>{formatCurrency(order.finalAmount)}</Text>
-          </View>
+        <View style={[styles.footer, { marginTop: 10, paddingTop: 5 }]}>
           <Text style={styles.wordAmount}>
             Bằng chữ: {numberToVietnameseWords(order.finalAmount)}
           </Text>
         </View>
 
-        <View style={styles.signatureSection}>
+        <View style={[styles.signatureSection, { alignItems: 'flex-end' }]}>
           <View style={styles.signatureBlock}>
-            <Text style={styles.signatureLabel}>Khách hàng</Text>
-            <Text style={{ fontSize: 8 }}>(Ký và ghi rõ họ tên)</Text>
+            <Text style={[styles.signatureLabel, { marginBottom: 5 }]}>Khách hàng</Text>
+            <Text style={{ fontSize: 9, marginBottom: 40, fontStyle: "italic" }}>(Ký và ghi rõ họ tên)</Text>
           </View>
-          <View style={styles.signatureBlock}>
-            <Text style={styles.signatureLabel}>Người lập hóa đơn</Text>
-            <Text style={{ fontSize: 8 }}>(Ký và ghi rõ họ tên)</Text>
+          <View style={[styles.signatureBlock, { width: "45%" }]}>
+            <Text style={{ fontSize: 10, marginBottom: 5, fontStyle: "italic", textAlign: "center" }}>
+              Ngày {format(new Date(order.createdAt), "dd")} tháng {format(new Date(order.createdAt), "MM")} năm {format(new Date(order.createdAt), "yyyy")}
+            </Text>
+            <Text style={[styles.signatureLabel, { marginBottom: 5 }]}>Người bán hàng</Text>
+            <Text style={{ fontSize: 9, marginBottom: 40, fontStyle: "italic" }}>(Ký và ghi rõ họ tên)</Text>
           </View>
         </View>
 
-        <View style={{ marginTop: 40, textAlign: "center", borderTopWidth: 1, borderTopColor: "#f1f5f9", paddingTop: 10 }}>
-          <Text style={{ fontSize: 8, color: "#94a3b8" }}>Cảm ơn quý khách đã tin tưởng và sử dụng dịch vụ của Minh Huy!</Text>
+        <View style={{ position: "absolute", bottom: 30, left: 40, right: 40, textAlign: "center", borderTopWidth: 1, borderTopColor: "#f1f5f9", paddingTop: 10 }}>
+          <Text style={{ fontSize: 8, color: "#94a3b8" }}>Cảm ơn quý khách đã tin tưởng và sử dụng dịch vụ của GIẤY HUY Thịnh!</Text>
         </View>
       </Page>
     </Document>

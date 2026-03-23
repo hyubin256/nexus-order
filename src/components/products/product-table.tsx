@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Copy, MoreHorizontal, Pencil, Trash } from "lucide-react";
+import useSWR from "swr";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,41 +45,29 @@ interface ProductTableProps {
 }
 
 export function ProductTable({ searchTerm, statusFilter, onEdit, onRefresh }: ProductTableProps) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 500);
 
-  const fetchProducts = useCallback(async () => {
-    try {
-      setLoading(true);
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        limit: "10",
-        search: debouncedSearch,
-        status: statusFilter,
-      });
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: "10",
+    search: debouncedSearch,
+    status: statusFilter,
+  });
 
-      const response = await fetch(`/api/products?${queryParams}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        setProducts(data.data);
-        setTotalPages(data.pagination.totalPages || 1);
-      } else {
-        toast.error("Lỗi khi tải danh sách sản phẩm.");
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Không thể kết nối đến máy chủ.");
-    } finally {
-      setLoading(false);
+  const { data, isLoading, mutate } = useSWR(
+    `/api/products?${queryParams.toString()}`,
+    {
+      revalidateOnFocus: false,
+      keepPreviousData: true,
     }
-  }, [page, debouncedSearch, statusFilter]);
+  );
+
+  const products = data?.data || [];
+  const totalPages = data?.pagination?.totalPages || 1;
 
   const handleDelete = async () => {
     if (!productToDelete) return;
@@ -89,7 +78,7 @@ export function ProductTable({ searchTerm, statusFilter, onEdit, onRefresh }: Pr
 
       if (result.success) {
         toast.success("Đã xóa sản phẩm thành công");
-        fetchProducts();
+        mutate();
         if (onRefresh) onRefresh();
       } else {
         toast.error(result.error || "Không thể xóa sản phẩm này.");
@@ -102,10 +91,6 @@ export function ProductTable({ searchTerm, statusFilter, onEdit, onRefresh }: Pr
       setProductToDelete(null);
     }
   };
-
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -158,7 +143,7 @@ export function ProductTable({ searchTerm, statusFilter, onEdit, onRefresh }: Pr
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
+            {isLoading ? (
               <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center">
                   Đang tải dữ liệu...
@@ -171,7 +156,7 @@ export function ProductTable({ searchTerm, statusFilter, onEdit, onRefresh }: Pr
                 </TableCell>
               </TableRow>
             ) : (
-              products.map((product) => (
+              products.map((product: Product) => (
                 <TableRow key={product.id}>
                   <TableCell>
                     <div className="h-10 w-10 overflow-hidden rounded-md border bg-muted">
@@ -253,7 +238,7 @@ export function ProductTable({ searchTerm, statusFilter, onEdit, onRefresh }: Pr
           variant="outline"
           size="sm"
           onClick={() => setPage((p) => Math.max(1, p - 1))}
-          disabled={page === 1 || loading}
+          disabled={page === 1 || isLoading}
         >
           Trước
         </Button>
@@ -261,7 +246,7 @@ export function ProductTable({ searchTerm, statusFilter, onEdit, onRefresh }: Pr
           variant="outline"
           size="sm"
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          disabled={page === totalPages || totalPages === 0 || loading}
+          disabled={page === totalPages || totalPages === 0 || isLoading}
         >
           Sau
         </Button>

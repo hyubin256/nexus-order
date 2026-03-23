@@ -26,86 +26,101 @@ export async function createPOSOrder(data: {
 }) {
   try {
     // 1. Dùng transaction để đảm bảo tính toàn vẹn dữ liệu
-    const result = await prisma.$transaction(async (tx) => {
-      // 2. Tạo mã đơn hàng tự động (ví dụ: POS-2024-0001)
-      const count = await tx.order.count();
-      const code = `POS-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, "0")}`;
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // 2. Tạo mã đơn hàng tự động (ví dụ: POS-2024-0001)
+        const count = await tx.order.count();
+        const code = `HDBH-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, "0")}`;
 
-      // 3. Tạo đơn hàng
-      const order = await tx.order.create({
-        data: {
-          code,
-          customerId: data.customerId,
-          customerName: data.customerName,
-          customerPhone: data.customerPhone,
-          customerAddress: data.customerAddress,
-          taxCode: data.taxCode,
-          customerType: data.customerType || "INDIVIDUAL",
-          totalAmount: data.totalAmount,
-          discountValue: data.discountValue,
-          finalAmount: data.finalAmount,
-          paymentStatus: data.paymentStatus || "PAID",
-          paymentMethod: data.paymentMethod || "CASH",
-          transactionId: data.transactionId,
-          paymentImage: data.paymentImage,
-          items: {
-            create: data.items.map((item) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              priceAtSale: item.price,
-              discountAtSale: item.discountAtSale || 0,
-            })),
+        // Tránh lỗi foreign key constraint nếu chuỗi customerId rỗng ("")
+        const validCustomerId = data.customerId?.trim() ? data.customerId : undefined;
+
+        // 3. Tạo đơn hàng
+        const order = await tx.order.create({
+          data: {
+            code,
+            customerId: validCustomerId,
+            customerName: data.customerName,
+            customerPhone: data.customerPhone,
+            customerAddress: data.customerAddress,
+            taxCode: data.taxCode,
+            customerType: data.customerType || "INDIVIDUAL",
+            totalAmount: data.totalAmount,
+            discountValue: data.discountValue,
+            finalAmount: data.finalAmount,
+            paymentStatus: data.paymentStatus || "PAID",
+            paymentMethod: data.paymentMethod || "CASH",
+            transactionId: data.transactionId,
+            paymentImage: data.paymentImage,
+            items: {
+              create: data.items.map((item) => ({
+                productId: item.productId,
+                quantity: item.quantity,
+                priceAtSale: item.price,
+                discountAtSale: item.discountAtSale || 0,
+              })),
+            },
           },
-        },
-      });
-
-      // 4. Trừ tồn kho và lưu log (nếu cần)
-      for (const item of data.items) {
-        const product = await tx.product.findUnique({
-          where: { id: item.productId },
+          include: {
+            items: {
+              include: {
+                product: true,
+              },
+            },
+          },
         });
 
-        if (!product || product.currentStock < item.quantity) {
-          throw new Error(`Sản phẩm ${product?.name || "không xác định"} không đủ tồn kho`);
+        // 4. Trừ tồn kho và lưu log (nếu cần)
+        for (const item of data.items) {
+          const product = await tx.product.findUnique({
+            where: { id: item.productId },
+          });
+
+          if (!product || product.currentStock < item.quantity) {
+            throw new Error(`Sản phẩm ${product?.name || "không xác định"} không đủ tồn kho`);
+          }
+
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              currentStock: {
+                decrement: item.quantity,
+              },
+            },
+          });
         }
 
-        await tx.product.update({
-          where: { id: item.productId },
-          data: {
-            currentStock: {
-              decrement: item.quantity,
+        // 5. Cập nhật chi tiêu khách hàng và thông tin khách hàng (Bảng Partner)
+        if (data.customerPhone) {
+          await tx.customer.upsert({
+            where: { phone: data.customerPhone },
+            update: {
+              name: data.customerName || "Khách lẻ",
+              address: data.customerAddress,
+              taxCode: data.taxCode,
+              type: data.customerType || "INDIVIDUAL",
+              totalSpending: {
+                increment: data.finalAmount,
+              },
             },
-          },
-        });
-      }
-
-      // 5. Cập nhật chi tiêu khách hàng và thông tin khách hàng (Bảng Partner)
-      if (data.customerPhone) {
-        await tx.customer.upsert({
-          where: { phone: data.customerPhone },
-          update: {
-            name: data.customerName || "Khách lẻ",
-            address: data.customerAddress,
-            taxCode: data.taxCode,
-            type: data.customerType || "INDIVIDUAL",
-            totalSpending: {
-              increment: data.finalAmount,
+            create: {
+              phone: data.customerPhone,
+              name: data.customerName || "Khách lẻ",
+              address: data.customerAddress,
+              taxCode: data.taxCode,
+              type: data.customerType || "INDIVIDUAL",
+              totalSpending: data.finalAmount,
             },
-          },
-          create: {
-            phone: data.customerPhone,
-            name: data.customerName || "Khách lẻ",
-            address: data.customerAddress,
-            taxCode: data.taxCode,
-            type: data.customerType || "INDIVIDUAL",
-            totalSpending: data.finalAmount,
-          },
-        });
+          });
+        }
+
+        return order;
+      },
+      {
+        maxWait: 5000, // 5 giây chờ connection pool
+        timeout: 15000, // 15 giây timeout cho transaction
       }
-
-      return order;
-    });
-
+    );
     revalidatePath("/");
     revalidatePath("/sales");
     return { success: true, data: result };

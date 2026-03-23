@@ -13,8 +13,14 @@ import { vi } from "date-fns/locale";
 import { numberToVietnameseWords } from "@/lib/utils";
 
 Font.register({
-  family: "Roboto",
-  src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf",
+  family: 'Roboto',
+  fonts: [
+    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf' },
+    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-medium-webfont.ttf', fontWeight: 500 },
+    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf', fontWeight: 700 },
+    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf', fontWeight: 'bold' },
+    { src: 'https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-italic-webfont.ttf', fontStyle: 'italic' },
+  ],
 });
 
 const styles = StyleSheet.create({
@@ -69,7 +75,7 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 10,
-    fontWeight: "medium",
+    fontWeight: 500,
     color: "#1e293b",
     marginBottom: 5,
   },
@@ -93,8 +99,8 @@ const styles = StyleSheet.create({
   tableColIndex: { width: "8%", padding: 5, textAlign: "center" },
   tableColName: { width: "42%", padding: 5 },
   tableColQty: { width: "10%", padding: 5, textAlign: "center" },
-  tableColPrice: { width: "20%", padding: 5, textAlign: "right" },
-  tableColTotal: { width: "20%", padding: 5, textAlign: "right" },
+  tableColPrice: { width: "20%", padding: 5, textAlign: "center" },
+  tableColTotal: { width: "20%", padding: 5, textAlign: "center" },
 
   footer: {
     marginTop: 20,
@@ -157,13 +163,13 @@ export const ReceiptPDF = ({ receipt }: Props) => {
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.companyName}>MINH HUY</Text>
-            <Text style={{ fontSize: 9, color: "#64748b" }}>Hệ thống quản lý nhập kho tối ưu</Text>
+            <Text style={styles.companyName}>GIẤY HUY Thịnh</Text>
+            {/* <Text style={{ fontSize: 9, color: "#64748b" }}>Hệ thống quản lý nhập kho tối ưu</Text> */}
           </View>
           <View style={styles.companyInfo}>
-            <Text>123 Đường ABC, Phường 15, Quận 10</Text>
-            <Text>TP. Hồ Chí Minh, Việt Nam</Text>
-            <Text>Hotline: 1900 6789 - info@nexusorder.vn</Text>
+            <Text><Text style={{ fontWeight: 700 }}>Địa chỉ:</Text> 141/3 Lưu Hữu Phước,</Text>
+            <Text>Phường Phú Định, TP. Hồ Chí Minh</Text>
+            <Text><Text style={{ fontWeight: 700 }}>Điện thoại:</Text> 0799310905</Text>
           </View>
         </View>
 
@@ -195,7 +201,7 @@ export const ReceiptPDF = ({ receipt }: Props) => {
         <View style={styles.table}>
           <View style={[styles.tableRow, styles.tableHeader]}>
             <View style={styles.tableColIndex}><Text>#</Text></View>
-            <View style={styles.tableColName}><Text>Tên sản phẩm / SKU</Text></View>
+            <View style={[styles.tableColName, { textAlign: "center" }]}><Text>Tên sản phẩm / SKU</Text></View>
             <View style={styles.tableColQty}><Text>SL</Text></View>
             <View style={styles.tableColPrice}><Text>Đơn giá</Text></View>
             <View style={styles.tableColTotal}><Text>Thành tiền</Text></View>

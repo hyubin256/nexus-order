@@ -36,7 +36,7 @@ export function MobileNav() {
       </SheetTrigger>
       <SheetContent side="left" className="w-[280px] sm:w-[350px]">
         <SheetHeader>
-          <SheetTitle className="text-left py-4">Minh Huy</SheetTitle>
+          <SheetTitle className="text-left py-4">Huy Thịnh</SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col gap-4 mt-4">
           {navItems.map((item) => {

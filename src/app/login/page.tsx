@@ -69,7 +69,7 @@ export default function LoginPage() {
               <Lock className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Minh Huy</CardTitle>
+          <CardTitle className="text-2xl font-bold">Huy Thịnh</CardTitle>
           <CardDescription>
             Đăng nhập vào hệ thống để bắt đầu
           </CardDescription>
@@ -133,7 +133,7 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter>
           <p className="text-center text-xs text-muted-foreground w-full">
-            © 2026 Minh Huy Management System
+            © 2026 Huy Thịnh Management System
           </p>
         </CardFooter>
       </Card>
